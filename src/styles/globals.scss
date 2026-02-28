@@ -321,6 +321,30 @@ a { color: var(--text); text-decoration: none; &:hover { opacity: 0.7; } }
     font-variant-numeric: tabular-nums;
     text-align: right;
     min-width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  &-percent {
+    color: var(--text-secondary);
+    font-weight: 500;
+    min-width: 52px;
+  }
+}
+
+.page-link-out {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  font-weight: 500;
+
+  span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 

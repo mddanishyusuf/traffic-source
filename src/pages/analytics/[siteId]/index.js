@@ -80,6 +80,11 @@ export default function Analytics() {
               country: data.countries || [],
               city: data.countries || [],
             }}
+            renderLabel={(row, meta) => {
+              if (meta.activeTab === 'city') return row.name;
+              return formatCountryLabel(row.name);
+            }}
+            showPercentage
             defaultTab="country"
           />
         </div>
@@ -97,6 +102,9 @@ export default function Analytics() {
               entry: (data.entryPages || []).map(p => ({ ...p, count: p.sessions })),
               exit: (data.exitPages || []).map(p => ({ ...p, count: p.sessions })),
             }}
+            renderLabel={(row) => renderPageLabel(row.name, data.site?.domain)}
+            showPercentage
+            barByTotal
             defaultTab="all"
           />
 
@@ -111,6 +119,12 @@ export default function Analytics() {
               os: data.os || [],
               device: data.devices || [],
             }}
+            renderLabel={(row, meta) => {
+              if (meta.activeTab === 'browser') return `${getBrowserIcon(row.name)} ${row.name}`;
+              if (meta.activeTab === 'os') return `${getOsIcon(row.name)} ${row.name}`;
+              return `${getDeviceIcon(row.name)} ${row.name}`;
+            }}
+            showPercentage
             defaultTab="browser"
           />
         </div>
@@ -151,4 +165,78 @@ export default function Analytics() {
       </DashboardLayout>
     </>
   );
+}
+
+function formatCountryLabel(codeOrName) {
+  if (!codeOrName) return 'Unknown';
+  const value = String(codeOrName).trim();
+  if (!/^[a-z]{2}$/i.test(value)) return value;
+  const upper = value.toUpperCase();
+  let countryName = upper;
+  try {
+    countryName = new Intl.DisplayNames(['en'], { type: 'region' }).of(upper) || upper;
+  } catch {
+    countryName = upper;
+  }
+  return `${countryCodeToFlag(upper)} ${countryName}`;
+}
+
+function countryCodeToFlag(countryCode) {
+  if (!/^[A-Z]{2}$/.test(countryCode)) return '';
+  const [first, second] = countryCode;
+  const base = 127397;
+  return String.fromCodePoint(first.charCodeAt(0) + base, second.charCodeAt(0) + base);
+}
+
+function renderPageLabel(pathname, siteDomain) {
+  const href = buildPageHref(pathname, siteDomain);
+  if (!href) return pathname || '/';
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="page-link-out">
+      <span>{pathname || '/'}</span>
+      <span aria-hidden="true">↗</span>
+    </a>
+  );
+}
+
+function buildPageHref(pathname, siteDomain) {
+  if (!pathname) return '';
+  if (/^https?:\/\//i.test(pathname)) return pathname;
+  const domain = normalizeDomain(siteDomain);
+  if (!domain) return '';
+  const safePath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  return `${domain}${safePath}`;
+}
+
+function normalizeDomain(domain) {
+  if (!domain) return '';
+  if (/^https?:\/\//i.test(domain)) return domain.replace(/\/$/, '');
+  return `https://${domain.replace(/\/$/, '')}`;
+}
+
+function getBrowserIcon(name = '') {
+  const value = name.toLowerCase();
+  if (value.includes('chrome')) return '🌐';
+  if (value.includes('safari')) return '🧭';
+  if (value.includes('firefox')) return '🦊';
+  if (value.includes('edge')) return '🟦';
+  if (value.includes('opera')) return '⭕';
+  return '🌍';
+}
+
+function getOsIcon(name = '') {
+  const value = name.toLowerCase();
+  if (value.includes('windows')) return '🪟';
+  if (value.includes('mac') || value.includes('ios')) return '🍎';
+  if (value.includes('android')) return '🤖';
+  if (value.includes('linux')) return '🐧';
+  return '💻';
+}
+
+function getDeviceIcon(name = '') {
+  const value = name.toLowerCase();
+  if (value.includes('mobile') || value.includes('phone')) return '📱';
+  if (value.includes('tablet') || value.includes('ipad')) return '📲';
+  if (value.includes('desktop') || value.includes('laptop')) return '🖥️';
+  return '📟';
 }
