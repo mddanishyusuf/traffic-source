@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import { AreaChart, Area, ResponsiveContainer, YAxis } from 'recharts';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default function Sites() {
@@ -96,7 +97,7 @@ export default function Sites() {
               .sort((a, b) => b.totalPageviews - a.totalPageviews)
               .map((site) => {
               const { totalPageviews, totalVisitors } = site;
-              const maxVal = Math.max(...site.hourly.map((h) => h.pageviews), 1);
+              const formatVisitors = (n) => n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K` : n.toString();
               return (
                 <div
                   key={site.id}
@@ -104,51 +105,48 @@ export default function Sites() {
                   onClick={() => router.push(`/analytics/${site.id}`)}
                 >
                   <div className="site-card-header">
-                    <div className="site-card-meta">
-                      <img
-                        className="site-card-favicon"
-                        src={`https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(site.domain)}`}
-                        alt=""
-                        width={24}
-                        height={24}
-                      />
-                      <div className="site-card-info">
-                        <div className="site-card-name">{site.name}</div>
-                        <div className="site-card-domain">{site.domain}</div>
-                      </div>
+                    <div className="site-card-info">
+                      <div className="site-card-name">{site.name}</div>
+                      <div className="site-card-domain">{site.domain}</div>
                     </div>
-                    <div className="site-card-stats">
-                      <div className="site-card-stat">
-                        <span className="site-card-stat-value">{totalPageviews.toLocaleString()}</span>
-                        <span className="site-card-stat-label">pageviews</span>
-                      </div>
-                      <div className="site-card-stat">
-                        <span className="site-card-stat-value site-card-stat-value--secondary">{totalVisitors.toLocaleString()}</span>
-                        <span className="site-card-stat-label">visitors</span>
-                      </div>
-                    </div>
+                    <button
+                      className="site-card-menu"
+                      onClick={(e) => { e.stopPropagation(); router.push(`/analytics/${site.id}/settings`); }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <circle cx="8" cy="3" r="1.5" />
+                        <circle cx="8" cy="8" r="1.5" />
+                        <circle cx="8" cy="13" r="1.5" />
+                      </svg>
+                    </button>
                   </div>
                   <div className="site-card-chart">
                     {site.hourly.length > 0 ? (
-                      site.hourly.map((h, i) => (
-                        <div
-                          key={i}
-                          className="site-card-bar-group"
-                          title={`${h.hour}\n${h.pageviews} pageviews\n${h.visitors} visitors`}
-                        >
-                          <div
-                            className="site-card-bar site-card-bar--pageviews"
-                            style={{ height: `${(h.pageviews / maxVal) * 100}%` }}
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={site.hourly} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+                          <YAxis domain={[0, 'dataMax']} hide />
+                          <Area
+                            type="monotone"
+                            dataKey="visitors"
+                            stroke="#f97316"
+                            fill="#f97316"
+                            fillOpacity={0.1}
+                            strokeWidth={1.5}
+                            dot={false}
+                            isAnimationActive={false}
                           />
-                          <div
-                            className="site-card-bar site-card-bar--visitors"
-                            style={{ height: `${(h.visitors / maxVal) * 100}%` }}
-                          />
-                        </div>
-                      ))
+                        </AreaChart>
+                      </ResponsiveContainer>
                     ) : (
                       <span className="site-card-nodata">No data</span>
                     )}
+                  </div>
+                  <div className="site-card-footer">
+                    <span className="site-card-stat-value">{formatVisitors(totalVisitors)}</span>
+                    {' '}
+                    <span className="site-card-stat-label">
+                      {totalVisitors === 1 ? 'visitor' : 'visitors'} in last 24h
+                    </span>
                   </div>
                 </div>
               );

@@ -645,9 +645,14 @@ a { color: var(--text); text-decoration: none; &:hover { color: var(--text-secon
 
 // ── Sites Page ──
 .sites-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+
+  @media (max-width: 1280px) { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 1024px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 768px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
 }
 
 .site-card {
@@ -657,89 +662,55 @@ a { color: var(--text); text-decoration: none; &:hover { color: var(--text-secon
   cursor: pointer;
   transition: all 0.15s;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
   &:hover { border-color: var(--hover-border); }
 
   &-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    padding: 16px 20px;
-    gap: 16px;
-  }
-
-  &-meta {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-  }
-
-  &-favicon {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    flex-shrink: 0;
-    background: var(--bg-surface);
+    padding: 16px 16px 0;
   }
 
   &-info { min-width: 0; }
   &-name { font-size: 15px; font-weight: 600; color: var(--text-heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  &-domain { font-size: 12px; color: var(--text-secondary); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  &-domain { font-size: 12px; color: var(--text-secondary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-  &-stats {
-    display: flex;
-    align-items: center;
-    gap: 20px;
+  &-menu {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
     flex-shrink: 0;
+    line-height: 0;
+
+    &:hover { color: var(--text-secondary); background: var(--accent-light); }
   }
 
-  &-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+  &-chart {
+    height: 72px;
+    flex: 1;
+    padding: 8px 0 0;
+  }
+
+  &-footer {
+    padding: 0 16px 14px;
   }
 
   &-stat-value {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text-heading);
     font-variant-numeric: tabular-nums;
-    line-height: 1.2;
-
-    &--secondary { font-size: 14px; color: var(--text-secondary); }
   }
 
-  &-stat-label { font-size: 11px; color: var(--text-muted); }
+  &-stat-label { font-size: 13px; color: var(--text-muted); }
 
-  &-chart {
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 64px;
-    padding: 0 20px 16px;
-  }
-
-  &-bar-group {
-    flex: 1;
-    display: flex;
-    align-items: flex-end;
-    gap: 1px;
-    height: 100%;
-    min-width: 0;
-  }
-
-  &-bar {
-    flex: 1;
-    min-width: 1px;
-    border-radius: 2px 2px 0 0;
-    transition: height 0.2s;
-
-    &--pageviews { background: var(--site-bar-primary); opacity: var(--site-bar-primary-opacity); }
-    &--visitors { background: var(--site-bar-secondary); opacity: var(--site-bar-secondary-opacity); }
-  }
-
-  &-nodata { font-size: 12px; color: var(--text-muted); margin: auto; }
+  &-nodata { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; height: 100%; }
 }
 
 
