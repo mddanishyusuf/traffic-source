@@ -6,6 +6,8 @@ Open-source, self-hosted web analytics with conversion tracking and affiliate ma
 
 ![Traffic Source Dashboard](demo-image.png)
 
+Built by the team behind [SuperDevPro](https://superdevpro.com) · [NoCode Web Scraper](https://nocodewebscraper.com) · [CrawlAPI](https://crawlapi.dev) · [MailLayer](https://maillayer.com)
+
 ## Features
 
 - **Real-time Analytics** — Live visitor count, pageviews, sessions, bounce rate, and session duration
