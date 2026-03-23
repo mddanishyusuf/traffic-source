@@ -9,12 +9,59 @@ export const config = {
   },
 };
 
+// ── In-memory rate limiter (per IP, sliding window) ──
+const RATE_WINDOW_MS = 60_000; // 1 minute
+const RATE_MAX_REQUESTS = 60;  // 60 requests per minute per IP
+const ipHits = new Map();
+
+// Cleanup stale entries every 5 minutes
+setInterval(() => {
+  const cutoff = Date.now() - RATE_WINDOW_MS;
+  for (const [ip, timestamps] of ipHits) {
+    if (timestamps.length === 0 || timestamps[timestamps.length - 1] < cutoff) {
+      ipHits.delete(ip);
+    }
+  }
+}, 5 * 60_000).unref?.();
+
+function isRateLimited(req) {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+    || req.headers['cf-connecting-ip']
+    || req.socket?.remoteAddress
+    || 'unknown';
+  const now = Date.now();
+  const windowStart = now - RATE_WINDOW_MS;
+
+  let timestamps = ipHits.get(ip);
+  if (!timestamps) {
+    timestamps = [];
+    ipHits.set(ip, timestamps);
+  }
+
+  // Slide window
+  while (timestamps.length > 0 && timestamps[0] < windowStart) {
+    timestamps.shift();
+  }
+
+  if (timestamps.length >= RATE_MAX_REQUESTS) {
+    return true;
+  }
+
+  timestamps.push(now);
+  return false;
+}
+
 export default function handler(req, res) {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
   if (req.method !== 'POST') {
     return res.status(405).end();
+  }
+
+  // Rate limit check
+  if (isRateLimited(req)) {
+    return res.status(429).end();
   }
 
   try {
@@ -30,6 +77,9 @@ export default function handler(req, res) {
     if (!site) {
       return res.status(404).end();
     }
+
+    // Wrap all writes in a single transaction (atomic + ~5x faster)
+    const runCollect = db.transaction(() => {
 
     const ua = new UAParser(req.headers['user-agent']);
     const browser = ua.getBrowser();
@@ -169,6 +219,10 @@ export default function handler(req, res) {
         ).run(visitorToday ? 1 : 0, data.site_id, today);
       }
     }
+
+    }); // end transaction
+
+    runCollect();
 
     res.status(200).end();
   } catch (err) {
