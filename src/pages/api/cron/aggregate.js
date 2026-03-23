@@ -1,4 +1,5 @@
 import { getDb } from '@/lib/db';
+import { purgeOldPageViews } from '@/lib/maintenance';
 
 export default function handler(req, res) {
   if (req.method !== 'POST') {
@@ -61,7 +62,14 @@ export default function handler(req, res) {
       );
     }
 
-    res.status(200).json({ aggregated: date, sites: sites.length });
+    // Purge old raw page_views to prevent unbounded DB growth
+    const purgeResult = purgeOldPageViews(90);
+
+    res.status(200).json({
+      aggregated: date,
+      sites: sites.length,
+      purged: purgeResult.deleted,
+    });
   } catch (err) {
     console.error('Aggregation error:', err);
     res.status(500).json({ error: 'Aggregation failed' });
