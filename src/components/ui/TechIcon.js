@@ -54,7 +54,7 @@ const icons = {
 };
 
 function resolve(type, name = '') {
-  const v = name.toLowerCase();
+  const v = (name || '').toLowerCase();
   if (type === 'browser') {
     if (v.includes('chrome')) return 'chrome';
     if (v.includes('safari')) return 'safari';

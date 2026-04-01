@@ -22,7 +22,7 @@ export function formatCountryLabel(codeOrName) {
 }
 
 export function getBrowserIcon(name = '') {
-  const value = name.toLowerCase();
+  const value = (name || '').toLowerCase();
   if (value.includes('chrome')) return '\u{1F310}';
   if (value.includes('safari')) return '\u{1F9ED}';
   if (value.includes('firefox')) return '\u{1F98A}';
@@ -32,7 +32,7 @@ export function getBrowserIcon(name = '') {
 }
 
 export function getOsIcon(name = '') {
-  const value = name.toLowerCase();
+  const value = (name || '').toLowerCase();
   if (value.includes('windows')) return '\u{1FA9F}';
   if (value.includes('mac') || value.includes('ios')) return '\u{1F34E}';
   if (value.includes('android')) return '\u{1F916}';
@@ -41,7 +41,7 @@ export function getOsIcon(name = '') {
 }
 
 export function getDeviceIcon(name = '') {
-  const value = name.toLowerCase();
+  const value = (name || '').toLowerCase();
   if (value.includes('mobile') || value.includes('phone')) return '\u{1F4F1}';
   if (value.includes('tablet') || value.includes('ipad')) return '\u{1F4F2}';
   if (value.includes('desktop') || value.includes('laptop')) return '\u{1F5A5}\uFE0F';
