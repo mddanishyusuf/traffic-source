@@ -9,6 +9,7 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { getCountryName, buildPageHref } from '@/lib/formatters';
 import CountryFlag from '@/components/ui/CountryFlag';
 import TechIcon from '@/components/ui/TechIcon';
+import ChannelIcon from '@/components/ui/ChannelIcon';
 
 export default function Analytics() {
   const router = useRouter();
@@ -72,6 +73,12 @@ export default function Analytics() {
               utm_campaign: (data.sources || []).filter(s => s.name !== 'Direct'),
             }}
             valueKey="sessions"
+            renderLabel={(row) => (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <ChannelIcon name={row.name} />
+                {row.name}
+              </span>
+            )}
             showPercentage
             defaultTab="referrer"
           />
