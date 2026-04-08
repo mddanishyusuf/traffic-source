@@ -6,7 +6,7 @@ Open-source, self-hosted web analytics with conversion tracking and affiliate ma
 
 ![Traffic Source Dashboard](demo-image.png)
 
-Built by the team behind [SuperDevPro](https://superdevpro.com) · [NoCode Web Scraper](https://nocodewebscraper.com) · [CrawlAPI](https://crawlapi.dev) · [MailLayer](https://maillayer.com)
+Built by the team behind [SuperDevPro](https://superdevpro.com) · [NoCode Web Scraper](https://nocodewebscraper.com) · [CrawlAPI](https://crawlapi.dev) · [MailLayer](https://maillayer.com) · [ClickDash](https://clickdash.io)
 
 ## Features
 
@@ -14,6 +14,7 @@ Built by the team behind [SuperDevPro](https://superdevpro.com) · [NoCode Web S
 - **Traffic Sources** — Referrers, UTM parameters (source, medium, campaign, term, content)
 - **Geo Tracking** — Country and city-level visitor data via Cloudflare proxy headers
 - **Device & Browser** — Browser, OS, device type, and screen resolution breakdowns
+- **Google Search Console** — One-click connect, drill into any keyword to see its pages, countries, and devices on a single screen
 - **Conversion Tracking** — Stripe integration that auto-syncs payments every 60 seconds — no webhooks needed
 - **Affiliate System** — Create affiliates with custom commission rates, shareable referral links, and public dashboards
 - **Visitor Journeys** — Full session replay showing every page a visitor viewed before converting
@@ -173,6 +174,32 @@ const session = await stripe.checkout.sessions.create({
 ```
 
 Traffic Source polls Stripe every 60 seconds and automatically matches payments to visitor sessions — no webhook setup required.
+
+## Google Search Console
+
+Connect your Google Search Console once and link any site to its property with a single click. Traffic Source keeps the last 90 days of keyword data and surfaces what's actually actionable: winners, losers, opportunities, quick wins, and a keyword explorer that shows pages, countries, and devices for any single query — something GSC's own UI doesn't surface together.
+
+### One-time setup (per Traffic Source instance)
+
+You need a Google Cloud OAuth client. Anyone using this instance shares the same client — you only do this once.
+
+1. **Create a Google Cloud project** — [console.cloud.google.com/projectcreate](https://console.cloud.google.com/projectcreate)
+2. **Enable the Search Console API** — [Search Console API](https://console.cloud.google.com/apis/library/searchconsole.googleapis.com) → Enable
+3. **Configure the OAuth consent screen** — [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)
+   - User type: **External**
+   - Add scope: `.../auth/webmasters.readonly`
+   - Add yourself (and any other users) under **Test users**
+4. **Create OAuth credentials** — [Credentials](https://console.cloud.google.com/apis/credentials) → **Create credentials → OAuth client ID**
+   - Application type: **Web application**
+   - Under **Authorized redirect URIs**, paste the URI shown in Traffic Source → **Settings → Integrations** (auto-detected from your deployed domain)
+5. **Save Client ID + Client Secret in Traffic Source** — Settings → Integrations → paste both → Save
+6. **Click "Connect Google Search Console"** — authorize once, done
+
+Credentials and refresh tokens are encrypted at rest with AES-256-GCM. The encryption key is auto-generated on first use and stored in `data/.appkey` (back this up alongside the database).
+
+### Linking a site
+
+On any site → **Search Console** tab → pick the matching property → backfill runs in the background. From then on, sync runs hourly (each site throttled to once per 12h).
 
 ## Affiliate System
 
