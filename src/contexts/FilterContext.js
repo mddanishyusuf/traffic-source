@@ -1,27 +1,47 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/router';
 
 const FilterContext = createContext();
 
 const FILTER_KEYS = ['channel', 'country', 'city', 'page', 'entry_page', 'exit_page', 'browser', 'os', 'device'];
 
 export function FilterProvider({ children }) {
-  const [filters, setFilters] = useState({});
+  const router = useRouter();
+
+  // Extract filter values from current URL query params
+  const filters = useMemo(() => {
+    const f = {};
+    for (const key of FILTER_KEYS) {
+      if (router.query[key]) f[key] = router.query[key];
+    }
+    return f;
+  }, [router.query]);
+
+  const updateQuery = useCallback((newFilters) => {
+    // Keep non-filter query params (like siteId) and merge with new filters
+    const query = {};
+    for (const [k, v] of Object.entries(router.query)) {
+      if (!FILTER_KEYS.includes(k)) query[k] = v;
+    }
+    for (const [k, v] of Object.entries(newFilters)) {
+      if (v) query[k] = v;
+    }
+    router.replace({ pathname: router.pathname, query }, undefined, { shallow: true });
+  }, [router]);
 
   const setFilter = useCallback((key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  }, []);
+    updateQuery({ ...filters, [key]: value });
+  }, [filters, updateQuery]);
 
   const removeFilter = useCallback((key) => {
-    setFilters((prev) => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-  }, []);
+    const next = { ...filters };
+    delete next[key];
+    updateQuery(next);
+  }, [filters, updateQuery]);
 
   const clearFilters = useCallback(() => {
-    setFilters({});
-  }, []);
+    updateQuery({});
+  }, [updateQuery]);
 
   const getFilterParams = useCallback(() => {
     const params = {};
