@@ -6,15 +6,29 @@ import AnalyticsPanel from '@/components/ui/AnalyticsPanel';
 import CombinedChart from '@/components/charts/CombinedChart';
 import RealtimeUsers from '@/components/ui/RealtimeUsers';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useFilters } from '@/contexts/FilterContext';
 import { getCountryName, buildPageHref } from '@/lib/formatters';
 import CountryFlag from '@/components/ui/CountryFlag';
 import TechIcon from '@/components/ui/TechIcon';
 import ChannelIcon from '@/components/ui/ChannelIcon';
 
+const FILTER_LABELS = {
+  channel: 'Channel',
+  country: 'Country',
+  city: 'City',
+  page: 'Page',
+  entry_page: 'Entry page',
+  exit_page: 'Exit page',
+  browser: 'Browser',
+  os: 'OS',
+  device: 'Device',
+};
+
 export default function Analytics() {
   const router = useRouter();
   const { siteId } = router.query;
   const { data, loading } = useAnalytics('overview');
+  const { filters, setFilter, removeFilter, clearFilters, hasFilters } = useFilters();
 
   if (loading || !data) {
     return (
@@ -29,12 +43,52 @@ export default function Analytics() {
 
   const conv = data.conversions?.totals || {};
 
+  // Toggle filter: clicking the same value removes it, clicking a different one sets it
+  const toggleFilter = (key, value) => {
+    if (filters[key] === value) {
+      removeFilter(key);
+    } else {
+      setFilter(key, value);
+    }
+  };
+
+  // Map tab keys to filter keys
+  const sourceTabToFilter = { referrer: 'channel', utm_source: 'channel', utm_campaign: 'channel' };
+  const geoTabToFilter = { country: 'country', city: 'city' };
+  const pageTabToFilter = { all: 'page', entry: 'entry_page', exit: 'exit_page' };
+  const techTabToFilter = { browser: 'browser', os: 'os', device: 'device' };
+
   return (
     <>
       <Head>
         <title>{data.site?.name || 'Analytics'} - Traffic Source</title>
       </Head>
       <DashboardLayout siteId={siteId} siteName={data.site?.name} siteDomain={data.site?.domain}>
+
+        {/* ── Active Filters Bar ── */}
+        {hasFilters && (
+          <div className="filter-bar">
+            <span className="filter-bar-label">Filtered by:</span>
+            {Object.entries(filters).map(([key, value]) => (
+              <span key={key} className="filter-pill">
+                <span className="filter-pill-label">{FILTER_LABELS[key] || key}:</span>
+                <span className="filter-pill-value">
+                  {key === 'country' ? getCountryName(value) : value}
+                </span>
+                <button
+                  className="filter-pill-remove"
+                  onClick={() => removeFilter(key)}
+                  aria-label={`Remove ${key} filter`}
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+            <button className="filter-clear" onClick={clearFilters}>
+              Clear all
+            </button>
+          </div>
+        )}
 
         {/* ── Realtime Active Users ── */}
         <RealtimeUsers />
@@ -81,6 +135,8 @@ export default function Analytics() {
             )}
             showPercentage
             defaultTab="referrer"
+            onRowClick={(row, tab) => toggleFilter(sourceTabToFilter[tab], row.name)}
+            activeFilter={{ tab: Object.keys(sourceTabToFilter).find(t => sourceTabToFilter[t] === 'channel'), value: filters.channel }}
           />
 
           <AnalyticsPanel
@@ -103,6 +159,8 @@ export default function Analytics() {
             }}
             showPercentage
             defaultTab="country"
+            onRowClick={(row, tab) => toggleFilter(geoTabToFilter[tab], row.name)}
+            activeFilter={{ tab: filters.country ? 'country' : filters.city ? 'city' : null, value: filters.country || filters.city }}
           />
         </div>
 
@@ -123,6 +181,11 @@ export default function Analytics() {
             showPercentage
             barByTotal
             defaultTab="all"
+            onRowClick={(row, tab) => toggleFilter(pageTabToFilter[tab], row.name)}
+            activeFilter={{
+              tab: filters.page ? 'all' : filters.entry_page ? 'entry' : filters.exit_page ? 'exit' : null,
+              value: filters.page || filters.entry_page || filters.exit_page,
+            }}
           />
 
           <AnalyticsPanel
@@ -144,6 +207,11 @@ export default function Analytics() {
             )}
             showPercentage
             defaultTab="browser"
+            onRowClick={(row, tab) => toggleFilter(techTabToFilter[tab], row.name)}
+            activeFilter={{
+              tab: filters.browser ? 'browser' : filters.os ? 'os' : filters.device ? 'device' : null,
+              value: filters.browser || filters.os || filters.device,
+            }}
           />
         </div>
 
@@ -234,7 +302,7 @@ function renderPageLabel(pathname, siteDomain) {
   const href = buildPageHref(pathname, siteDomain);
   if (!href) return pathname || '/';
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="page-link-out">
+    <a href={href} target="_blank" rel="noopener noreferrer" className="page-link-out" onClick={(e) => e.stopPropagation()}>
       <span>{pathname || '/'}</span>
       <span aria-hidden="true">&uarr;</span>
     </a>

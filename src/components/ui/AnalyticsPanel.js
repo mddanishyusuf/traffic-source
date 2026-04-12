@@ -10,6 +10,8 @@ export default function AnalyticsPanel({
   renderLabel,
   showPercentage = false,
   barByTotal = false,
+  onRowClick,
+  activeFilter,
 }) {
   const [activeTab, setActiveTab] = useState(defaultTab || (tabs && tabs[0]?.key));
 
@@ -47,8 +49,15 @@ export default function AnalyticsPanel({
               ? renderValue(rowValue, row, { sharePct, barPct, activeTab })
               : formatNumber(rowValue);
 
+            const isActive = activeFilter && activeFilter.tab === activeTab && activeFilter.value === row[labelKey];
+            const clickable = !!onRowClick;
+
             return (
-              <div className="analytics-row" key={i}>
+              <div
+                className={`analytics-row${clickable ? ' clickable' : ''}${isActive ? ' row-active' : ''}`}
+                key={i}
+                onClick={clickable ? () => onRowClick(row, activeTab) : undefined}
+              >
                 <div
                   className="analytics-row-bar"
                   style={{ width: `${barPct}%` }}
